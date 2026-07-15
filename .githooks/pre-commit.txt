@@ -1,0 +1,30 @@
+#!/bin/bash
+# Pre-commit hook: 기본 검증
+# 실패 시 커밋 차단
+
+echo "[Pre-commit] 기본 검증 실행 중..."
+
+# 1. 민감 정보 체크
+echo "  - 민감 정보 체크"
+if git diff --cached --name-only | xargs grep -l -E '(API_KEY|SECRET|PASSWORD|TOKEN).*=.*[a-zA-Z0-9]{8,}' 2>/dev/null; then
+    echo "ERROR: 민감 정보가 포함되어 있습니다. .env 파일 사용 후 .gitignore 추가 필요"
+    exit 1
+fi
+
+# 2. 큰 파일 체크 (5MB 이상)
+echo "  - 큰 파일 체크"
+large_files=$(git diff --cached --name-only | xargs ls -l 2>/dev/null | awk '$5 > 5242880 {print $9}')
+if [ -n "$large_files" ]; then
+    echo "ERROR: 5MB 이상 파일 포함"
+    echo "$large_files"
+    exit 1
+fi
+
+# 3. package-lock.json 동기화 체크
+if git diff --cached --name-only | grep -q "package.json"; then
+    if ! git diff --cached --name-only | grep -q "package-lock.json"; then
+        echo "WARNING: package.json 변경됨. package-lock.json 함께 커밋 필요"
+    fi
+fi
+
+echo "[Pre-commit] 검증 완료"

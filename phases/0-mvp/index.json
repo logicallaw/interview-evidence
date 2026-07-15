@@ -1,0 +1,44 @@
+{
+  "project": "interview-evidence",
+  "phase": "0-mvp",
+  "steps": [
+    {
+      "step": 0,
+      "name": "project-setup",
+      "status": "completed",
+      "started_at": "2026-07-16T08:29:46+0900",
+      "summary": "requirements.txt, src/__init__.py, tests/__init__.py, tests/fixtures/, tests/conftest.py 생성 완료"
+    },
+    {
+      "step": 1,
+      "name": "rtzr-client",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "segments",
+      "status": "pending"
+    },
+    {
+      "step": 3,
+      "name": "semantic-search",
+      "status": "pending"
+    },
+    {
+      "step": 4,
+      "name": "exporters",
+      "status": "pending"
+    },
+    {
+      "step": 5,
+      "name": "streamlit-app",
+      "status": "pending"
+    },
+    {
+      "step": 6,
+      "name": "integration",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-07-16T08:29:46+0900"
+}

@@ -58,13 +58,14 @@ class StepExecutor:
     CHORE_MSG = "chore({phase}): step {num} output"
     TZ = timezone(timedelta(hours=9))
 
-    def __init__(self, phase_dir_name: str, *, auto_push: bool = False):
+    def __init__(self, phase_dir_name: str, *, auto_push: bool = False, model: str = "sonnet"):
         self._root = str(ROOT)
         self._phases_dir = ROOT / "phases"
         self._phase_dir = self._phases_dir / phase_dir_name
         self._phase_dir_name = phase_dir_name
         self._top_index_file = self._phases_dir / "index.json"
         self._auto_push = auto_push
+        self._model = model
 
         if not self._phase_dir.is_dir():
             print(f"ERROR: {self._phase_dir} not found")
@@ -236,7 +237,9 @@ class StepExecutor:
 
         prompt = preamble + step_file.read_text()
         result = subprocess.run(
-            ["claude", "-p", "--dangerously-skip-permissions", "--output-format", "json", prompt],
+            ["claude", "-p", "--dangerously-skip-permissions", "--output-format", "json",
+             "--model", self._model],
+            input=prompt,
             cwd=self._root, capture_output=True, text=True, timeout=1800,
         )
 
@@ -261,7 +264,7 @@ class StepExecutor:
     def _print_header(self):
         print(f"\n{'='*60}")
         print(f"  Harness Step Executor")
-        print(f"  Phase: {self._phase_name} | Steps: {self._total}")
+        print(f"  Phase: {self._phase_name} | Steps: {self._total} | Model: {self._model}")
         if self._auto_push:
             print(f"  Auto-push: enabled")
         print(f"{'='*60}")
@@ -408,9 +411,10 @@ def main():
     parser = argparse.ArgumentParser(description="Harness Step Executor")
     parser.add_argument("phase_dir", help="Phase directory name (e.g. 0-mvp)")
     parser.add_argument("--push", action="store_true", help="Push branch after completion")
+    parser.add_argument("--model", default="sonnet", help="Claude model alias (e.g. sonnet, opus)")
     args = parser.parse_args()
 
-    StepExecutor(args.phase_dir, auto_push=args.push).run()
+    StepExecutor(args.phase_dir, auto_push=args.push, model=args.model).run()
 
 
 if __name__ == "__main__":

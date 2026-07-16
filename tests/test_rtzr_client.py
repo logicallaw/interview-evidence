@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import requests as requests_lib
+
 from src.rtzr_client import (
+    FatalError,
+    RetryableError,
     Utterance,
     _validate_completed_response,
     authenticate,
@@ -156,3 +160,70 @@ class TestFixtureParsing:
         assert "owner" not in completed_fixture
         assert "created_at" not in completed_fixture
         assert "access_token" not in completed_fixture
+
+
+# --- timeout ---
+
+
+class TestTimeoutPassedToRequests:
+    @patch("src.rtzr_client.requests.post")
+    def test_authenticate_has_timeout(self, mock_post):
+        mock_post.return_value = _mock_response(200, {"access_token": "tok"})
+        authenticate("id", "secret")
+        _, kwargs = mock_post.call_args
+        assert "timeout" in kwargs
+
+    @patch("src.rtzr_client.requests.post")
+    def test_create_transcription_has_timeout(self, mock_post):
+        mock_post.return_value = _mock_response(200, {"id": "tx-001"})
+        create_transcription("tok", b"audio", "test.wav")
+        _, kwargs = mock_post.call_args
+        assert "timeout" in kwargs
+
+    @patch("src.rtzr_client.requests.get")
+    def test_get_transcription_has_timeout(self, mock_get):
+        mock_get.return_value = _mock_response(200, {"status": "transcribing"})
+        get_transcription("tok", "tx-001")
+        _, kwargs = mock_get.call_args
+        assert "timeout" in kwargs
+
+
+# --- 오류 분류 ---
+
+
+class TestGetTranscriptionErrorClassification:
+    @patch("src.rtzr_client.requests.get")
+    def test_429_raises_retryable(self, mock_get):
+        mock_get.return_value = _mock_response(429, {})
+        with pytest.raises(RetryableError):
+            get_transcription("tok", "tx-001")
+
+    @patch("src.rtzr_client.requests.get")
+    def test_500_raises_retryable(self, mock_get):
+        mock_get.return_value = _mock_response(500, {})
+        with pytest.raises(RetryableError):
+            get_transcription("tok", "tx-001")
+
+    @patch("src.rtzr_client.requests.get")
+    def test_401_raises_fatal(self, mock_get):
+        mock_get.return_value = _mock_response(401, {})
+        with pytest.raises(FatalError):
+            get_transcription("tok", "tx-001")
+
+    @patch("src.rtzr_client.requests.get")
+    def test_403_raises_fatal(self, mock_get):
+        mock_get.return_value = _mock_response(403, {})
+        with pytest.raises(FatalError):
+            get_transcription("tok", "tx-001")
+
+    @patch("src.rtzr_client.requests.get")
+    def test_connection_error_raises_retryable(self, mock_get):
+        mock_get.side_effect = requests_lib.ConnectionError()
+        with pytest.raises(RetryableError):
+            get_transcription("tok", "tx-001")
+
+    @patch("src.rtzr_client.requests.get")
+    def test_timeout_raises_retryable(self, mock_get):
+        mock_get.side_effect = requests_lib.Timeout()
+        with pytest.raises(RetryableError):
+            get_transcription("tok", "tx-001")

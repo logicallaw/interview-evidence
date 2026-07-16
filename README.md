@@ -152,7 +152,6 @@ The candidate's consecutive utterances are grouped into answer segments. When th
 
 Each result can be reviewed with its transcript context and source audio. Audio playback starts at the beginning of the selected answer and continues until three seconds after it ends. The current criterion and timestamped answer evidence can then be exported as structured JSON for documentation and follow-up review.
 
-
 ## 📂 Project Structure
 
 ```bash
@@ -167,6 +166,8 @@ interview-evidence/
 │   ├── segments.py                # Builds answer segments and playback boundaries
 │   └── semantic_search.py         # Embeds text and retrieves the Top-K answers
 ├── tests/
+│   ├── __init__.py
+│   ├── conftest.py                # Shared pytest fixtures
 │   ├── fixtures/
 │   │   └── rtzr_completed.json    # Synthetic completed transcription response
 │   ├── test_exporters.py
@@ -182,7 +183,11 @@ interview-evidence/
 │   ├── ARCHITECTURE.md            # System structure and data flow
 │   ├── PRD.md                     # Product scope and requirements
 │   └── UI_GUIDE.md                # UI states, copy, and visual guidelines
+├── .github/
+│   ├── ISSUE_TEMPLATE/            # Issue templates (bug, chore, docs, feature, fix)
+│   └── pull_request_template.md   # Pull request template
 ├── .env.example                   # Environment variable template
+├── .gitignore
 ├── requirements.txt               # Pinned Python dependencies
 └── README.md
 ```

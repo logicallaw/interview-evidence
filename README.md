@@ -207,6 +207,17 @@ The `public/audio/interview-sample.wav` file was generated with NAVER CLOVA Dubb
 
 The recording is synthetic and does not contain real interview data. An audible attribution notice for NAVER CLOVA Dubbing is included at the beginning of the file.
 
+## 📚 References and Attribution
+
+This project was developed with reference to the following official documentation and examples:
+
+- [RTZR Authentication Guide](https://developers.rtzr.ai/docs/authentications/) — access-token authentication
+- [RTZR Batch STT API](https://developers.rtzr.ai/docs/stt-file/) — file upload, transcription polling, response fields, and STT options
+- [RTZR Rate Limit](https://developers.rtzr.ai/docs/rate_limit/) — concurrency-limit handling and exponential backoff
+- [EmbeddingGemma Model Overview](https://ai.google.dev/gemma/docs/embeddinggemma) — model characteristics and usage requirements
+- [EmbeddingGemma with Sentence Transformers](https://ai.google.dev/gemma/docs/embeddinggemma/inference-embeddinggemma-with-sentence-transformers) — model loading and retrieval query/document prompts
+- [RTZR Automatic Chapters Tutorial](https://blog.rtzr.ai/stt-api-auto-chapters-timestamps/) — conceptual reference during early exploration; the final project implements evaluation-criterion-based answer retrieval rather than automatic chapter segmentation
+
 ## 👥 Contributor
 
 | Name                                                     | Role                   |

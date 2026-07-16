@@ -1,7 +1,0 @@
-{
-  "step": 1,
-  "name": "rtzr-client",
-  "exitCode": 0,
-  "stdout": "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"duration_ms\":39,\"duration_api_ms\":1523,\"num_turns\":0,\"result\":\"\",\"stop_reason\":null,\"session_id\":\"c035e0ce-7f10-45ef-8b83-2612f288f705\",\"total_cost_usd\":0.000284,\"usage\":{\"input_tokens\":0,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":0,\"server_tool_use\":{\"web_search_requests\":0,\"web_fetch_requests\":0},\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":0,\"ephemeral_5m_input_tokens\":0}},\"modelUsage\":{\"claude-haiku-4-5-20251001\":{\"inputTokens\":199,\"outputTokens\":17,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0,\"webSearchRequests\":0,\"costUSD\":0.000284,\"contextWindow\":200000,\"maxOutputTokens\":64000}},\"permission_denials\":[],\"uuid\":\"c61ab96e-adcb-42ff-a854-009406e0eeed\"}\n",
-  "stderr": ""
-}

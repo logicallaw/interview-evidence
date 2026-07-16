@@ -9,3 +9,7 @@ build/
 .pytest_cache/
 interview-sample.txt
 interview-evidence-plan.md
+
+# Intermediate artifacts
+issues/
+outputs/

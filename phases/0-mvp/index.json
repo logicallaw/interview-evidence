@@ -13,15 +13,15 @@
     {
       "step": 1,
       "name": "rtzr-client",
-      "status": "error",
+      "status": "completed",
       "started_at": "2026-07-16T08:55:49+0900",
-      "error_message": "[3회 시도 후 실패] Step did not update status",
-      "failed_at": "2026-07-16T08:55:59+0900"
+      "summary": "src/rtzr_client.py (인증·전사요청·상태조회·응답검증), tests/fixtures/rtzr_completed.json (50발화 합성 fixture), tests/test_rtzr_client.py (15개 단위 테스트) 생성 완료"
     },
     {
       "step": 2,
       "name": "segments",
-      "status": "pending"
+      "status": "completed",
+      "summary": "src/segments.py (AnswerSegment, 화자추출, 대표발화, 구간구성, 재생경계), tests/test_segments.py (27개 단위 테스트) 생성 완료"
     },
     {
       "step": 3,

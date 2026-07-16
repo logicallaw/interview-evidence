@@ -7,12 +7,23 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 import time
+import warnings
 import wave
+
+# transformers 비전 모듈이 torchvision을 탐색할 때 나오는 경고 억제
+warnings.filterwarnings("ignore", message=".*torchvision.*")
 
 import streamlit as st
 from dotenv import load_dotenv
+
+logging.basicConfig(
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    level=logging.DEBUG,
+)
+logging.getLogger("streamlit.watcher.local_sources_watcher").setLevel(logging.ERROR)
 
 from src import exporters, rtzr_client, segments, semantic_search
 

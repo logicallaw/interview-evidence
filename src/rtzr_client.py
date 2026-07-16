@@ -7,10 +7,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass, field
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://openapi.vito.ai/v1"
 
@@ -53,12 +56,15 @@ class TranscriptionJob:
 
 def authenticate(client_id: str, client_secret: str) -> str:
     """RTZR OAuth 토큰을 획득한다. 실패 시 예외를 발생시킨다."""
+    logger.info("RTZR 인증 요청 시작")
     resp = requests.post(
         f"{_BASE_URL}/authenticate",
         data={"client_id": client_id, "client_secret": client_secret},
     )
     if resp.status_code != 200:
+        logger.error("RTZR 인증 실패 (HTTP %d)", resp.status_code)
         raise RuntimeError(f"RTZR 인증 실패 (HTTP {resp.status_code})")
+    logger.info("RTZR 인증 성공")
     return resp.json()["access_token"]
 
 
@@ -72,6 +78,8 @@ def create_transcription(token: str, file_bytes: bytes, filename: str) -> str:
     files = {"file": (filename, file_bytes)}
     data = {"config": json.dumps(_TRANSCRIPTION_CONFIG)}
 
+    logger.info("RTZR 전사 요청 시작 (파일: %s)", filename)
+
     resp = None
     for attempt in range(4):  # 1 initial + 3 retries
         resp = requests.post(
@@ -83,22 +91,34 @@ def create_transcription(token: str, file_bytes: bytes, filename: str) -> str:
         if resp.status_code == 429:
             body = resp.json()
             if body.get("code") == "A0002" and attempt < 3:
+                logger.warning(
+                    "RTZR 429 A0002 — %d초 후 재시도 (%d/3)",
+                    _RETRY_DELAYS[attempt],
+                    attempt + 1,
+                )
                 time.sleep(_RETRY_DELAYS[attempt])
                 continue
         break
 
+    logger.debug("RTZR 전사 요청 응답 (HTTP %d): %s", resp.status_code, resp.text)
     if resp.status_code != 200:
+        logger.error("RTZR 전사 요청 실패 (HTTP %d)", resp.status_code)
         raise RuntimeError(f"RTZR 전사 요청 실패 (HTTP {resp.status_code})")
-    return resp.json()["id"]
+    transcribe_id = resp.json()["id"]
+    logger.info("RTZR 전사 접수 완료 (transcribe_id: %s)", transcribe_id)
+    return transcribe_id
 
 
 def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
     """전사 상태를 조회하고 정규화된 TranscriptionJob을 반환한다."""
+    logger.debug("RTZR 전사 조회 (transcribe_id: %s)", transcribe_id)
     resp = requests.get(
         f"{_BASE_URL}/transcribe/{transcribe_id}",
         headers={"Authorization": f"Bearer {token}"},
     )
+    logger.debug("RTZR 전사 조회 응답 (HTTP %d): %s", resp.status_code, resp.text)
     if resp.status_code != 200:
+        logger.error("RTZR 전사 조회 실패 (HTTP %d)", resp.status_code)
         raise RuntimeError(f"RTZR 전사 조회 실패 (HTTP {resp.status_code})")
 
     data = resp.json()
@@ -106,6 +126,11 @@ def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
 
     if status == "completed":
         utterances = _validate_completed_response(data)
+        logger.info(
+            "RTZR 전사 완료 (transcribe_id: %s, 발화 %d개)",
+            transcribe_id,
+            len(utterances),
+        )
         return TranscriptionJob(
             id=transcribe_id,
             status="completed",
@@ -113,6 +138,12 @@ def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
         )
 
     if status == "failed":
+        logger.error(
+            "RTZR 전사 실패 (transcribe_id: %s, code: %s, message: %s)",
+            transcribe_id,
+            data.get("code"),
+            data.get("message"),
+        )
         return TranscriptionJob(
             id=transcribe_id,
             status="failed",
@@ -120,6 +151,7 @@ def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
             error_message=data.get("message"),
         )
 
+    logger.debug("RTZR 전사 진행 중 (transcribe_id: %s, status: %s)", transcribe_id, status)
     return TranscriptionJob(id=transcribe_id, status="transcribing")
 
 

@@ -22,6 +22,10 @@ Interview Evidence combines speaker-aware transcription, semantic retrieval, tra
 - Source-audio playback from the start of the selected answer to three seconds after it ends
 - Structured JSON export of the evaluation criterion and timestamped answer evidence for documentation and follow-up review
 
+## 📺 Demo Video
+Experience the functionality of this project by watching the demo video:  
+[Watch the Demo](https://youtube.com/shorts/D9ucWfBXXJA?feature=share)
+
 ## 🚀 Quick Start
 
 ### Requirements

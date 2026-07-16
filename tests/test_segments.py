@@ -189,12 +189,22 @@ class TestBuildAnswerSegments:
 class TestComputePlaybackBounds:
     def test_normal_range(self):
         start, end = compute_playback_bounds(52000, 92000, 550.0)
-        assert start == 49
+        assert start == 52
         assert end == 95
 
     def test_clamp_to_zero(self):
-        start, _ = compute_playback_bounds(1000, 5000, 550.0)
+        start, _ = compute_playback_bounds(0, 5000, 550.0)
         assert start == 0
+
+    def test_start_at_1s(self):
+        start, _ = compute_playback_bounds(1000, 5000, 550.0)
+        assert start == 1
+
+    def test_ms_start_floor(self):
+        """밀리초 단위 시작 — floor로 첫 음절 보호."""
+        start, end = compute_playback_bounds(52800, 92200, 550.0)
+        assert start == 52
+        assert end == 96
 
     def test_clamp_to_audio_end(self):
         _, end = compute_playback_bounds(540000, 549000, 550.0)

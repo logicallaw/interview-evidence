@@ -336,6 +336,8 @@ def _render_evidence_search():
     spks = st.session_state.speakers
     cand = st.session_state.candidate_speaker
     st.caption(f"현재 선택: {_spk_role(cand, spks, cand)}")
+    if st.session_state.device_info:
+        st.caption(f"검색 모델 실행 장치: {st.session_state.device_info.upper()}")
 
     # 질의
     st.markdown("#### 확인할 내용을 입력하세요")

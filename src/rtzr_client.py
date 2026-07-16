@@ -30,6 +30,20 @@ _TRANSCRIPTION_CONFIG = {
 }
 
 _RETRY_DELAYS = [2, 4, 8]
+_TIMEOUT = (10, 30)  # (connect_timeout, read_timeout)
+_UPLOAD_TIMEOUT = (10, 120)  # 업로드는 파일 크기에 따라 read timeout을 넓게
+
+
+class TranscriptionError(Exception):
+    """전사 관련 기본 예외."""
+
+
+class RetryableError(TranscriptionError):
+    """재시도 가능한 일시적 오류 (네트워크, 429, 5xx)."""
+
+
+class FatalError(TranscriptionError):
+    """즉시 중단해야 하는 오류 (인증, 검증, 4xx)."""
 
 
 @dataclass
@@ -60,6 +74,7 @@ def authenticate(client_id: str, client_secret: str) -> str:
     resp = requests.post(
         f"{_BASE_URL}/authenticate",
         data={"client_id": client_id, "client_secret": client_secret},
+        timeout=_TIMEOUT,
     )
     if resp.status_code != 200:
         logger.error("RTZR 인증 실패 (HTTP %d)", resp.status_code)
@@ -87,6 +102,7 @@ def create_transcription(token: str, file_bytes: bytes, filename: str) -> str:
             headers=headers,
             files=files,
             data=data,
+            timeout=_UPLOAD_TIMEOUT,
         )
         if resp.status_code == 429:
             body = resp.json()
@@ -110,47 +126,64 @@ def create_transcription(token: str, file_bytes: bytes, filename: str) -> str:
 
 
 def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
-    """전사 상태를 조회하고 정규화된 TranscriptionJob을 반환한다."""
-    logger.debug("RTZR 전사 조회 (transcribe_id: %s)", transcribe_id)
-    resp = requests.get(
-        f"{_BASE_URL}/transcribe/{transcribe_id}",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    if resp.status_code != 200:
-        logger.error("RTZR 전사 조회 실패 (HTTP %d)", resp.status_code)
-        raise RuntimeError(f"RTZR 전사 조회 실패 (HTTP {resp.status_code})")
+    """전사 상태를 조회하고 정규화된 TranscriptionJob을 반환한다.
 
-    data = resp.json()
-    status = data.get("status", "")
+    일시적 오류(네트워크, 429, 5xx)는 RetryableError,
+    복구 불가 오류(인증, 4xx, 검증)는 FatalError를 발생시킨다.
+    """
+    try:
+        logger.debug("RTZR 전사 조회 (transcribe_id: %s)", transcribe_id)
+        resp = requests.get(
+            f"{_BASE_URL}/transcribe/{transcribe_id}",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=_TIMEOUT,
+        )
+        if resp.status_code != 200:
+            if resp.status_code in (429, 500, 502, 503, 504):
+                raise RetryableError(
+                    f"RTZR 전사 조회 일시적 오류 (HTTP {resp.status_code})"
+                )
+            raise FatalError(
+                f"RTZR 전사 조회 실패 (HTTP {resp.status_code})"
+            )
 
-    if status == "completed":
-        utterances = _validate_completed_response(data)
-        logger.info(
-            "RTZR 전사 완료 (transcribe_id: %s, 발화 %d개)",
-            transcribe_id,
-            len(utterances),
-        )
-        return TranscriptionJob(
-            id=transcribe_id,
-            status="completed",
-            utterances=utterances,
-        )
+        data = resp.json()
+        status = data.get("status", "")
 
-    if status == "failed":
-        logger.error(
-            "RTZR 전사 실패 (transcribe_id: %s, code: %s)",
-            transcribe_id,
-            data.get("code"),
-        )
-        return TranscriptionJob(
-            id=transcribe_id,
-            status="failed",
-            error_code=data.get("code"),
-            error_message=data.get("message"),
-        )
+        if status == "completed":
+            utterances = _validate_completed_response(data)
+            logger.info(
+                "RTZR 전사 완료 (transcribe_id: %s, 발화 %d개)",
+                transcribe_id,
+                len(utterances),
+            )
+            return TranscriptionJob(
+                id=transcribe_id,
+                status="completed",
+                utterances=utterances,
+            )
 
-    logger.debug("RTZR 전사 진행 중 (transcribe_id: %s, status: %s)", transcribe_id, status)
-    return TranscriptionJob(id=transcribe_id, status="transcribing")
+        if status == "failed":
+            logger.error(
+                "RTZR 전사 실패 (transcribe_id: %s, code: %s)",
+                transcribe_id,
+                data.get("code"),
+            )
+            return TranscriptionJob(
+                id=transcribe_id,
+                status="failed",
+                error_code=data.get("code"),
+                error_message=data.get("message"),
+            )
+
+        logger.debug("RTZR 전사 진행 중 (transcribe_id: %s, status: %s)", transcribe_id, status)
+        return TranscriptionJob(id=transcribe_id, status="transcribing")
+    except (RetryableError, FatalError):
+        raise
+    except (requests.ConnectionError, requests.Timeout) as e:
+        raise RetryableError(f"RTZR 전사 조회 네트워크 오류: {e}") from e
+    except Exception as e:
+        raise FatalError(f"RTZR 전사 조회 처리 오류: {e}") from e
 
 
 def _validate_completed_response(data: dict) -> list[Utterance]:

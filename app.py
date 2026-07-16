@@ -26,6 +26,7 @@ logging.basicConfig(
 logging.getLogger("streamlit.watcher.local_sources_watcher").setLevel(logging.ERROR)
 
 from src import exporters, rtzr_client, segments, semantic_search
+from src.rtzr_client import RetryableError
 
 
 # ── 헬퍼 ─────────────────────────────────────────────────
@@ -249,8 +250,12 @@ def _poll_loop(token, tid, status):
                 status.update(label="전사 실패", state="error")
                 st.error(f"전사가 실패했습니다: {msg}\n\n새 파일을 업로드하거나 다시 시도하세요.")
                 return
-        except Exception:
+        except RetryableError:
             backoff = min(backoff * 2, 8)
+        except Exception:
+            status.update(label="조회 중 오류 발생", state="error")
+            st.error("전사 상태를 확인할 수 없습니다. 잠시 후 다시 시도하세요.")
+            return
         sleep_sec = 5 * backoff
         time.sleep(sleep_sec)
         elapsed += sleep_sec

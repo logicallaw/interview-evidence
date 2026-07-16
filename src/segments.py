@@ -119,8 +119,9 @@ def compute_playback_bounds(
 ) -> tuple[int, int]:
     """오디오 재생 경계를 계산한다.
 
+    답변 시작 시점부터 종료 3초 후까지, 음원 경계 안에서 재생한다.
     반환: (start_sec, end_sec) — 둘 다 정수.
     """
-    start_sec = max(0, math.floor(start_at_ms / 1000) - 3)
+    start_sec = max(0, math.floor(start_at_ms / 1000))
     end_sec = min(math.floor(audio_duration_sec), math.ceil(end_at_ms / 1000) + 3)
     return start_sec, end_sec

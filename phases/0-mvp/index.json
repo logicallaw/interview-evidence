@@ -26,22 +26,26 @@
     {
       "step": 3,
       "name": "semantic-search",
-      "status": "pending"
+      "status": "completed",
+      "summary": "src/semantic_search.py (모델로드·임베딩·Top K), scripts/prepare_model.py, tests/test_semantic_search.py (10개 단위 테스트) 생성 완료"
     },
     {
       "step": 4,
       "name": "exporters",
-      "status": "pending"
+      "status": "completed",
+      "summary": "src/exporters.py (허용 필드 payload·UTF-8 직렬화), tests/test_exporters.py (9개 단위 테스트) 생성 완료"
     },
     {
       "step": 5,
       "name": "streamlit-app",
-      "status": "pending"
+      "status": "completed",
+      "summary": "app.py (3-depth UI, 전사폴링, 화자선택, 의미검색, 상세layer, JSON다운로드) 생성 완료"
     },
     {
       "step": 6,
       "name": "integration",
-      "status": "pending"
+      "status": "completed",
+      "summary": "fixture 통합 테스트 6개, README 설치 순서, CRITICAL 규칙 위반 점검 완료 (67개 테스트 전체 통과)"
     }
   ],
   "created_at": "2026-07-16T08:29:46+0900"

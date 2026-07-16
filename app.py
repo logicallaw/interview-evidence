@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 logging.getLogger("streamlit.watcher.local_sources_watcher").setLevel(logging.ERROR)
 

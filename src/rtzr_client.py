@@ -100,7 +100,7 @@ def create_transcription(token: str, file_bytes: bytes, filename: str) -> str:
                 continue
         break
 
-    logger.debug("RTZR 전사 요청 응답 (HTTP %d): %s", resp.status_code, resp.text)
+    logger.info("RTZR 전사 요청 응답 (HTTP %d)", resp.status_code)
     if resp.status_code != 200:
         logger.error("RTZR 전사 요청 실패 (HTTP %d)", resp.status_code)
         raise RuntimeError(f"RTZR 전사 요청 실패 (HTTP {resp.status_code})")
@@ -116,7 +116,6 @@ def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
         f"{_BASE_URL}/transcribe/{transcribe_id}",
         headers={"Authorization": f"Bearer {token}"},
     )
-    logger.debug("RTZR 전사 조회 응답 (HTTP %d): %s", resp.status_code, resp.text)
     if resp.status_code != 200:
         logger.error("RTZR 전사 조회 실패 (HTTP %d)", resp.status_code)
         raise RuntimeError(f"RTZR 전사 조회 실패 (HTTP {resp.status_code})")
@@ -139,10 +138,9 @@ def get_transcription(token: str, transcribe_id: str) -> TranscriptionJob:
 
     if status == "failed":
         logger.error(
-            "RTZR 전사 실패 (transcribe_id: %s, code: %s, message: %s)",
+            "RTZR 전사 실패 (transcribe_id: %s, code: %s)",
             transcribe_id,
             data.get("code"),
-            data.get("message"),
         )
         return TranscriptionJob(
             id=transcribe_id,

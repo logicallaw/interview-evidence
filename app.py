@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 logging.getLogger("streamlit.watcher.local_sources_watcher").setLevel(logging.ERROR)
 
@@ -159,8 +159,8 @@ def _render_audio_setup():
 
     uploaded = st.file_uploader(
         "면접 음성 파일",
-        type=["wav", "mp3", "m4a", "flac", "webm"],
-        help="한 명의 면접관과 한 명의 지원자가 대화한 파일 1개를 선택하세요.",
+        type=["wav"],
+        help="한 명의 면접관과 한 명의 지원자가 대화한 WAV 파일 1개를 선택하세요.",
     )
     if uploaded is not None and st.session_state.audio_filename != uploaded.name:
         _clear_post_transcription()

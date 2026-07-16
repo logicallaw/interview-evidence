@@ -16,6 +16,8 @@ cp .env.example .env
 # .env 파일에 RTZR_CLIENT_ID, RTZR_CLIENT_SECRET, HF_TOKEN 입력
 
 # 4. 모델 사전 준비
+# google/embeddinggemma-300m은 gated model입니다.
+# 실행 전에 https://huggingface.co/google/embeddinggemma-300m 에서 라이선스에 동의하세요.
 python scripts/prepare_model.py
 
 # 5. 단위 테스트
